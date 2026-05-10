@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- 📱 LOCK MOBILE VIEW -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>Relativity Warp Rocket - Mobile</title>
@@ -57,12 +56,12 @@ body {
         radial-gradient(circle at center, #2196f3, #08142b);
 }
 
-/* 🚀 ROCKET CENTER */
+/* 🚀 ROCKET WRAPPER (MOVES) */
 #rocketWrapper {
     position: absolute;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    left: 0;
+    transform: translateY(-50%);
 }
 
 /* 🚀 ROCKET */
@@ -124,13 +123,12 @@ body {
     background: #2b2b2b;
 }
 
-/* 🔥 FIRE (MOBILE OPTIMIZED) */
+/* 🔥 FIRE */
 .fire {
     position: absolute;
     right: -8vw;
     top: 50%;
     transform: translate(0, -50%);
-
     width: 18vw;
     height: 10vw;
 
@@ -149,25 +147,25 @@ body {
     100% { transform: translate(0, -50%) scale(1.5); opacity: 1; }
 }
 
-/* 📊 HUD (MOBILE GLASS STYLE) */
+/* 📊 HUD (BIGGER TEXT) */
 #hud {
     position: absolute;
     top: 2vh;
     left: 2vw;
 
-    background: rgba(10, 14, 25, 0.8);
-    padding: 10px;
+    background: rgba(10, 14, 25, 0.85);
+    padding: 14px;
     border-radius: 12px;
     backdrop-filter: blur(8px);
 }
 
 #hud table {
-    font-size: 14px;
+    font-size: 18px; /* 🔥 BIGGER */
     color: #d7f3ff;
 }
 
 #hud td {
-    padding: 4px 8px;
+    padding: 6px 10px; /* 🔥 BIGGER SPACING */
 }
 
 #hud td:first-child {
@@ -175,7 +173,7 @@ body {
     font-weight: bold;
 }
 
-/* 🎚 SLIDER (TOUCH FRIENDLY) */
+/* 🎚 SLIDER */
 #controls {
     position: absolute;
     bottom: 3vh;
@@ -243,7 +241,25 @@ for (let i = 0; i < 80; i++) {
     space.appendChild(s);
 }
 
-/* 🚀 PHYSICS */
+/* 🚀 ROCKET MOVEMENT */
+let x = 0;
+
+function animate() {
+    let v = parseFloat(slider.value);
+
+    // 🚀 rocket moves right faster as velocity increases
+    x += 2 + v * 10;
+
+    document.getElementById("rocketWrapper").style.left = x + "px";
+
+    if (x > window.innerWidth + 200) {
+        x = -200;
+    }
+
+    requestAnimationFrame(animate);
+}
+
+/* 📊 PHYSICS */
 function update() {
     let v = parseFloat(slider.value);
 
@@ -261,7 +277,9 @@ function update() {
 }
 
 slider.addEventListener("input", update);
+
 update();
+animate();
 </script>
 
 </body>
