@@ -29,13 +29,6 @@ body {
     background: white;
     border-radius: 50%;
     opacity: 0.8;
-    animation: twinkle 2s infinite ease-in-out;
-}
-
-@keyframes twinkle {
-    0% { opacity: 0.2; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.4); }
-    100% { opacity: 0.3; transform: scale(1); }
 }
 
 /* 🪐 PLANET */
@@ -56,7 +49,7 @@ body {
         radial-gradient(circle at center, #2196f3, #08142b);
 }
 
-/* 🚀 ROCKET WRAPPER (MOVES) */
+/* 🚀 ROCKET WRAPPER */
 #rocketWrapper {
     position: absolute;
     top: 50%;
@@ -69,21 +62,18 @@ body {
     position: relative;
     width: 60vw;
     height: 14vw;
-    transform-origin: center;
 }
 
-/* 🧠 NOSE */
+/* NOSE */
 .nose {
     position: absolute;
     left: 0;
-    width: 0;
-    height: 0;
     border-top: 7vw solid transparent;
     border-bottom: 7vw solid transparent;
     border-right: 10vw solid #d7dde6;
 }
 
-/* 🚀 BODY */
+/* BODY */
 .body {
     position: absolute;
     left: 8vw;
@@ -93,7 +83,7 @@ body {
     border-radius: 7vw;
 }
 
-/* 🔵 WINDOW */
+/* WINDOW */
 .window {
     position: absolute;
     left: 25vw;
@@ -104,68 +94,103 @@ body {
     background: radial-gradient(circle, #8ff0ff, #1b4d66);
 }
 
-/* 🔥 ENGINES */
-.engine {
+/* ENGINE */
+.engine, .engine2 {
     position: absolute;
     right: 2vw;
-    top: 3vw;
     width: 4vw;
     height: 5vw;
     background: #2b2b2b;
 }
 
-.engine2 {
-    position: absolute;
-    right: 2vw;
-    top: 8vw;
-    width: 4vw;
-    height: 5vw;
-    background: #2b2b2b;
-}
+.engine { top: 3vw; }
+.engine2 { top: 8vw; }
 
-/* 🔥 FIRE */
+/* 🔥 FIRE (ANIMATED UPGRADE) */
 .fire {
     position: absolute;
     right: -8vw;
     top: 50%;
-    transform: translate(0, -50%);
+    transform: translateY(-50%);
     width: 18vw;
     height: 10vw;
+}
 
+/* Outer flame */
+.fire::before {
+    content: "";
+    position: absolute;
+    inset: 0;
     background: radial-gradient(circle,
-        orange 20%,
-        red 60%,
+        #fff 0%,
+        #ffb300 25%,
+        #ff3d00 55%,
         transparent 80%);
-
     border-radius: 50%;
     filter: blur(4px);
-    animation: flicker 0.06s infinite alternate;
+    animation: flameFlicker 0.08s infinite alternate;
 }
 
-@keyframes flicker {
-    0% { transform: translate(0, -50%) scale(1); opacity: 0.7; }
-    100% { transform: translate(0, -50%) scale(1.5); opacity: 1; }
+/* Inner core */
+.fire::after {
+    content: "";
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    left: 20%;
+    top: 20%;
+    background: radial-gradient(circle, #ffffff, #ff9800, transparent 70%);
+    border-radius: 50%;
+    filter: blur(2px);
+    animation: corePulse 0.05s infinite alternate;
 }
 
-/* 📊 HUD (BIGGER TEXT) */
+/* 🔥 ANIMATIONS */
+@keyframes flameFlicker {
+    0% {
+        transform: scale(0.9) skewX(-5deg);
+        opacity: 0.7;
+    }
+    25% {
+        transform: scale(1.2) skewX(3deg);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5) skewX(-6deg);
+        opacity: 0.9;
+    }
+    75% {
+        transform: scale(1.1) skewX(4deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.6) skewX(-2deg);
+        opacity: 0.85;
+    }
+}
+
+@keyframes corePulse {
+    from { transform: scale(0.8); opacity: 0.8; }
+    to   { transform: scale(1.3); opacity: 1; }
+}
+
+/* 📊 HUD */
 #hud {
     position: absolute;
     top: 2vh;
     left: 2vw;
-
     background: rgba(10, 14, 25, 0.85);
     padding: 14px;
     border-radius: 12px;
-    backdrop-filter: blur(8px);
 }
 
 #hud table {
-    font-size: 18px; /* 🔥 BIGGER */
+    font-size: 20px;
     color: #d7f3ff;
 }
 
 #hud td {
-    padding: 6px 10px; /* 🔥 BIGGER SPACING */
+    padding: 8px 12px;
 }
 
 #hud td:first-child {
@@ -173,7 +198,7 @@ body {
     font-weight: bold;
 }
 
-/* 🎚 SLIDER */
+/* SLIDER */
 #controls {
     position: absolute;
     bottom: 3vh;
@@ -190,7 +215,6 @@ input[type=range] {
 <body>
 
 <div id="space"></div>
-
 <div id="planet"></div>
 
 <div id="rocketWrapper">
@@ -204,7 +228,6 @@ input[type=range] {
     </div>
 </div>
 
-<!-- 📊 HUD -->
 <div id="hud">
 <table>
 <tr><td>Velocity</td><td><span id="v">0</span> c</td></tr>
@@ -224,9 +247,12 @@ const vText = document.getElementById("v");
 const gText = document.getElementById("g");
 const LText = document.getElementById("L");
 
-let space = document.getElementById("space");
+const rocketWrapper = document.getElementById("rocketWrapper");
+
+let x = window.innerWidth;
 
 /* ⭐ STARS */
+let space = document.getElementById("space");
 for (let i = 0; i < 80; i++) {
     let s = document.createElement("div");
     s.className = "star";
@@ -241,39 +267,34 @@ for (let i = 0; i < 80; i++) {
     space.appendChild(s);
 }
 
-/* 🚀 ROCKET MOVEMENT */
-let x = 0;
-
+/* 🚀 RIGHT → LEFT MOVEMENT */
 function animate() {
     let v = parseFloat(slider.value);
 
-    // 🚀 rocket moves right faster as velocity increases
-    x += 2 + v * 10;
+    x -= (2 + v * 10);
 
-    document.getElementById("rocketWrapper").style.left = x + "px";
+    rocketWrapper.style.left = x + "px";
 
-    if (x > window.innerWidth + 200) {
-        x = -200;
+    if (x < -300) {
+        x = window.innerWidth + 300;
     }
 
     requestAnimationFrame(animate);
 }
 
-/* 📊 PHYSICS */
+/* 📊 RELATIVITY */
 function update() {
     let v = parseFloat(slider.value);
 
     let gamma = 1 / Math.sqrt(1 - v * v);
     let contraction = Math.sqrt(1 - v * v);
 
-    let L = 100 * contraction;
-
     document.getElementById("rocket").style.transform =
         `scale(${contraction}, 1)`;
 
     vText.textContent = v.toFixed(2);
     gText.textContent = gamma.toFixed(2);
-    LText.textContent = L.toFixed(1);
+    LText.textContent = (100 * contraction).toFixed(1);
 }
 
 slider.addEventListener("input", update);
