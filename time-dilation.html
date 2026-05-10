@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Time Dilation Clock Simulator</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background: black;
+        color: white;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    #space {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, #0b0f1a 0%, #000000 100%);
+        overflow: hidden;
+    }
+
+    .star {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: white;
+        border-radius: 50%;
+        opacity: 0.9;
+    }
+
+    .trail {
+        position: absolute;
+        width: 1px;
+        background: linear-gradient(white, transparent);
+        opacity: 0.5;
+        transform-origin: top;
+    }
+
+    h1, table, .container, .controls {
+        position: relative;
+        z-index: 2;
+    }
+
+    h1 { margin-top: 20px; }
+
+    table {
+        margin: 20px auto;
+        border-collapse: collapse;
+        background: #111827;
+        min-width: 520px;
+    }
+
+    th, td {
+        border: 1px solid #444;
+        padding: 10px;
+    }
+
+    th { background: #1f2937; }
+
+    .container {
+        display: flex;
+        justify-content: center;
+        gap: 120px;
+        margin-top: 30px;
+    }
+
+    .clock-wrapper {
+        text-align: center;
+    }
+
+    .label {
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .clock {
+        width: 220px;
+        height: 220px;
+        border: 6px solid white;
+        border-radius: 50%;
+        position: relative;
+        background: rgba(0,0,0,0.2);
+    }
+
+    .number {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        text-align: center;
+        font-size: 16px;
+        transform: translate(-50%, -50%);
+    }
+
+    .hand {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform-origin: 0% 50%;
+    }
+
+    .hour { width: 30%; height: 4px; background: white; }
+    .minute { width: 40%; height: 3px; background: #ccc; }
+    .second { width: 45%; height: 2px; background: red; }
+
+    .center {
+        width: 12px;
+        height: 12px;
+        background: white;
+        border-radius: 50%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    input[type="range"] {
+        width: 350px;
+        height: 6px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #00c6ff, #0072ff);
+        outline: none;
+        appearance: none;
+        cursor: pointer;
+        box-shadow: 0 0 12px rgba(0, 150, 255, 0.6);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #00c6ff;
+        box-shadow: 0 0 12px #00c6ff;
+        cursor: pointer;
+    }
+
+    button {
+        padding: 8px 14px;
+        background: #1f2937;
+        color: white;
+        border: 1px solid #444;
+        cursor: pointer;
+        margin: 5px;
+    }
+
+    .controls {
+        margin-top: 60px;
+    }
+
+    .explanation-table th, .explanation-table td {
+        text-align: left;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="space"></div>
+
+<h1>Time Dilation Clock Simulator</h1>
+
+<table>
+    <tr>
+        <th>Speed (km/s)</th>
+        <th>Speed (c)</th>
+        <th>Time Dilation (γ)</th>
+        <th>Time Difference (s)</th>
+    </tr>
+    <tr>
+        <td id="kmps">0</td>
+        <td id="cval">0</td>
+        <td id="gammaVal">1</td>
+        <td id="timeDiff">0</td>
+    </tr>
+</table>
+
+<div class="container">
+
+    <div class="clock-wrapper">
+        <div class="label">Earth Clock</div>
+        <div class="clock">
+            <div id="clock1-numbers"></div>
+            <div class="hand hour" id="h1"></div>
+            <div class="hand minute" id="m1"></div>
+            <div class="hand second" id="s1"></div>
+            <div class="center"></div>
+        </div>
+    </div>
+
+    <div class="clock-wrapper">
+        <div class="label">Space Clock</div>
+        <div class="clock">
+            <div id="clock2-numbers"></div>
+            <div class="hand hour" id="h2"></div>
+            <div class="hand minute" id="m2"></div>
+            <div class="hand second" id="s2"></div>
+            <div class="center"></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="controls">
+    <input type="range" min="0" max="0.99" step="0.01" value="0" id="speed">
+
+    <button onclick="resetSim()">Reset</button>
+
+    <a href="index.html">
+        <button>Home</button>
+    </a>
+</div>
+
+<table class="explanation-table">
+    <tr>
+        <th>Concept</th>
+        <th>Explanation</th>
+    </tr>
+    <tr>
+        <td>Time Dilation</td>
+        <td>
+            Time Dilation is a phenomenon from Einstein's theory of Special Relativity.
+            It describes how time passes slower for an object moving close to the speed of light
+            compared to an observer at rest.
+        </td>
+    </tr>
+</table>
+
+<script>
+
+const C = 299792;
+
+let tStationary = 0;
+let tMoving = 0;
+
+const speedSlider = document.getElementById("speed");
+
+const kmps = document.getElementById("kmps");
+const cval = document.getElementById("cval");
+const gammaVal = document.getElementById("gammaVal");
+const timeDiff = document.getElementById("timeDiff");
+
+function gamma(v) {
+    return 1 / Math.sqrt(1 - v * v);
+}
+
+function createNumbers(id) {
+    const container = document.getElementById(id);
+
+    for (let i = 1; i <= 12; i++) {
+        const el = document.createElement("div");
+        el.className = "number";
+
+        const angle = (i * 30) * Math.PI / 180;
+        const radius = 90;
+
+        el.style.left = (110 + radius * Math.sin(angle)) + "px";
+        el.style.top = (110 - radius * Math.cos(angle)) + "px";
+
+        el.innerHTML = i;
+        container.appendChild(el);
+    }
+}
+
+function setClock(h, m, s, hours, minutes, seconds) {
+    h.style.transform = `rotate(${(hours % 12) * 30 + minutes * 0.5}deg)`;
+    m.style.transform = `rotate(${minutes * 6}deg)`;
+    s.style.transform = `rotate(${seconds * 6}deg)`;
+}
+
+function resetSim() {
+    tStationary = 0;
+    tMoving = 0;
+    speedSlider.value = 0;
+}
+
+const space = document.getElementById("space");
+
+const stars = [];
+
+for (let i = 0; i < 200; i++) {
+
+    const star = {
+        x: Math.random() * window.innerWidth - window.innerWidth / 2,
+        y: Math.random() * window.innerHeight - window.innerHeight / 2,
+        z: Math.random() * window.innerWidth,
+        px: 0,
+        py: 0,
+        el: document.createElement("div"),
+        trail: document.createElement("div")
+    };
+
+    star.el.className = "star";
+    star.trail.className = "trail";
+
+    space.appendChild(star.trail);
+    space.appendChild(star.el);
+
+    stars.push(star);
+}
+
+function updateStars(speed) {
+
+    for (let s of stars) {
+
+        s.z -= speed * 12;
+
+        if (s.z <= 1) {
+            s.z = window.innerWidth;
+            s.x = Math.random() * window.innerWidth - window.innerWidth / 2;
+            s.y = Math.random() * window.innerHeight - window.innerHeight / 2;
+        }
+
+        const scale = 250 / s.z;
+
+        const x = s.x * scale + window.innerWidth / 2;
+        const y = s.y * scale + window.innerHeight / 2;
+
+        s.el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+
+        const dx = x - s.px;
+        const dy = y - s.py;
+
+        const len = Math.sqrt(dx * dx + dy * dy);
+
+        if (len > 2) {
+            s.trail.style.width = len + "px";
+            s.trail.style.left = s.px + "px";
+            s.trail.style.top = s.py + "px";
+            s.trail.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+            s.trail.style.opacity = Math.min(speed * 2, 0.8);
+        }
+
+        s.px = x;
+        s.py = y;
+    }
+}
+
+createNumbers("clock1-numbers");
+createNumbers("clock2-numbers");
+
+setClock(h1, m1, s1, 0, 0, 0);
+setClock(h2, m2, s2, 0, 0, 0);
+
+function update() {
+
+    let v = parseFloat(speedSlider.value);
+    let g = gamma(v);
+
+    tStationary += 0.05;
+    tMoving += 0.05 / g;
+
+    setClock(h1, m1, s1,
+        tStationary / 3600,
+        (tStationary % 3600) / 60,
+        tStationary % 60
+    );
+
+    setClock(h2, m2, s2,
+        tMoving / 3600,
+        (tMoving % 3600) / 60,
+        tMoving % 60
+    );
+
+    kmps.textContent = (v * C).toFixed(0);
+    cval.textContent = v.toFixed(2);
+    gammaVal.textContent = g.toFixed(4);
+    timeDiff.textContent = (tStationary - tMoving).toFixed(2);
+
+    updateStars(v);
+
+    requestAnimationFrame(update);
+}
+
+update();
+
+</script>
+
+</body>
+</html>
